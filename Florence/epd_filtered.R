@@ -1,5 +1,5 @@
 # Load the tidyverse
-setwd('/Users/fm/Public/HDS/Data Challenge')
+setwd('/Users/fm/Public/HDS/Data Challenge/local data')
 library(tidyverse)
 
 # Load in Mar 2019 Data and select relevant columns only
