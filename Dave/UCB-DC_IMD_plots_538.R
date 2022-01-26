@@ -1,4 +1,4 @@
-## Info ------------------------------------------------------------------------
+sc## Info ------------------------------------------------------------------------
 ##
 ## Script name: Data Challenge Plots - Indices of Multiple Deprivation (IMD)
 ##
@@ -60,9 +60,9 @@ ggplot(pd_gp_clean,
        aes(date, 
            items_per_1k_pats, 
            colour = deprivation_decile )) +
-  labs(title = 'Systemic Corticosteroids Prescriptions per Indices of Multiple Deprivation (IMD) Decile',
+  labs(title = 'Systemic Corticosteroids Prescriptions per IMD Decile',
        subtitle = 'Before and after the onset of COVID-19\nApr 2019 - Oct 2021',
-       y = "Items perscribed per 1000 patients",
+       y = "SCS Prescriptions per 1000 patients",
        x = "",
        caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
   expand_limits(x = as.Date("2019-03-18")) +
@@ -117,10 +117,10 @@ ggsave('plots/Corticosteroids_Perscriptions_IMD_Line_538.png', width = 10, heigh
 ## Plot 2: Box plot......
 ggplot(pd_gp_clean, aes(items_per_1k_pats, colour = deprivation_decile)) +
   geom_boxplot() +
-  labs(title = 'Systemic Corticosteroids Prescriptions in Rural and Urban Areas',
+  labs(title = 'Systemic Corticosteroids Prescriptions per IMD Decile',
        subtitle = 'Average Prescribing Rate\nApr 2019 - Oct 2021',
        y = "",
-       x = "Items perscribed per 1000 patients",
+       x = "SCS Prescriptions per 1000 patients",
        colour='',
        caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
   scale_colour_discrete(name="",
