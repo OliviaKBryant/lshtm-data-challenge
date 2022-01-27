@@ -97,22 +97,24 @@ ggplot(pd_gp_clean,
                  as.Date("2020-03-29"), 
                  as.Date("2020-11-08"), 
                  as.Date("2021-01-08")), 
-           y = 20.1, 
+           y = 21, 
            label = c("1st C19 Case", 
                      "1st Lockdown",
                      "2nd Lockdown",
                      "3rd Lockdown") , 
-           size = 2.4,
+           size = 3,
            alpha = 0.7,
            angle = -90,
            hjust = 1,
-           vjust = 0) +
+           vjust = 0
+           ) + # stops the labels from disappearing 
   scale_colour_discrete(name="",
                         breaks=c("rural", "urban"),
                         labels=c("Rural", "Urban")) +
   scale_x_date(date_labels = "%b %y",
                date_breaks = "3 month") +
-  theme(panel.grid.major.x = element_blank())
+  theme(panel.grid.major.x = element_blank()) +
+  scale_colour_fivethirtyeight()
 ## Save plot to the size of a 16:9 PowerPoint slide
 ggsave('plots/Corticosteroids_Perscriptions_Rural_Urban_Line_538.png', width = 10, height = 5.625, units = "in")
 ##

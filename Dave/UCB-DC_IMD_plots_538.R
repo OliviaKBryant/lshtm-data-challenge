@@ -106,7 +106,7 @@ ggplot(pd_gp_clean,
            alpha = 0.7,
            angle = -90,
            hjust = 1,
-           vjust = 0) +
+           vjust = 0) + # stops the labels from disappearing 
   geom_line(show.legend = TRUE) +
   scale_colour_discrete(name="IMD Decile",
                         breaks=c("rural", "urban"),
