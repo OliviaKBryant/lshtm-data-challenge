@@ -1,4 +1,4 @@
-sc## Info ------------------------------------------------------------------------
+## Info ------------------------------------------------------------------------
 ##
 ## Script name: Data Challenge Plots - Indices of Multiple Deprivation (IMD)
 ##
@@ -24,7 +24,10 @@ library(ggthemes)
 setwd("~/HDS/Data Challange/UCB")
 theme_set(theme_fivethirtyeight())
 theme_update(axis.title = element_text(),
-             plot.caption = element_text(hjust = 0, vjust = 0))
+             plot.caption = element_text(hjust = 0, vjust = 0),
+             plot.background = element_rect(fill = "white", colour = "white"),
+             panel.background = element_rect(fill = "white", colour = "white"),
+             legend.background = element_rect(fill = "white", colour = "white"))
 ##
 ## Load Data -------------------------------------------------------------------
 ## Analysis dataset
