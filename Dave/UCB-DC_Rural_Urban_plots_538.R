@@ -21,6 +21,7 @@
 ## Setup -----------------------------------------------------------------------
 library(tidyverse)
 library(ggthemes)
+library(scales)
 setwd("~/HDS/Data Challange/UCB")
 theme_set(theme_fivethirtyeight())
 theme_update(axis.title = element_text(),
@@ -42,7 +43,8 @@ pd_gp_clean <- pd_gp %>%
   left_join(GPs, by = "gp_id") %>%
   drop_na() %>%
   mutate(items_per_1k_pats = items/list_size *1000) %>%
-  filter(covid_period %in% c("pre-covid year 1",
+  filter(covid_period %in% c("pre-covid year 2",
+                             "pre-covid year 1",
                              "covid year 1",
                              "covid year 2"),
          prescribing_setting == 4,
@@ -68,8 +70,7 @@ ggplot(pd_gp_clean,
        y = "Items perscribed per 1000 patients",
        x = "",
        caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
-  expand_limits(x = as.Date("2019-03-18")) +
-  ylim(8,22.5) +
+  ylim(0,22.5) +
   geom_vline(xintercept = as.Date("2020-01-28"), # first case in the UK
              colour = "gray") +
   annotate("rect", # first lockdown
@@ -108,13 +109,13 @@ ggplot(pd_gp_clean,
            hjust = 1,
            vjust = 0
            ) + # stops the labels from disappearing 
-  scale_colour_discrete(name="",
+  scale_colour_fivethirtyeight(name="",
                         breaks=c("rural", "urban"),
                         labels=c("Rural", "Urban")) +
-  scale_x_date(date_labels = "%b %y",
-               date_breaks = "3 month") +
-  theme(panel.grid.major.x = element_blank()) +
-  scale_colour_fivethirtyeight()
+  scale_x_date(labels = scales::label_date_short(),
+               date_breaks = "3 month",
+               limits = c(as.Date("2019-03-01"), as.Date("2021-10-01"))) +
+  theme(panel.grid.major.x = element_blank())
 ## Save plot to the size of a 16:9 PowerPoint slide
 ggsave('plots/Corticosteroids_Perscriptions_Rural_Urban_Line_538.png', width = 10, height = 5.625, units = "in")
 ##
