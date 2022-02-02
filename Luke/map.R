@@ -2,19 +2,21 @@ library(shiny)
 library(tidyverse)
 library(ggthemes)
 library(leaflet)
+library(rgdal)
+library(sf)
 
-theme_set(theme_fivethirtyeight())
-theme_update(axis.title = element_text(),
-             plot.caption = element_text(hjust = 0, vjust = 0),
-             plot.background = element_rect(fill = "white", colour = "white"),
-             panel.background = element_rect(fill = "white", colour = "white"),
-             legend.background = element_rect(fill = "white", colour = "white"))
+## theme_set(theme_fivethirtyeight())
+## theme_update(axis.title = element_text(),
+##              plot.caption = element_text(hjust = 0, vjust = 0),
+##              plot.background = element_rect(fill = "white", colour = "white"),
+##              panel.background = element_rect(fill = "white", colour = "white"),
+##              legend.background = element_rect(fill = "white", colour = "white"))
 
 input_directory <- "/Users/lukeconroy/OneDrive/Masters_UK/HDS/Semester_2/Data_Challenge/Raw_Data/Official_data/Analysis Dataset/"
 setwd(input_directory)
 
 ##shape files for map
-mapData <- as_tibble(read.csv("regional_shape.csv"))
+regions_poly <- st_read("NHS_England_Regions_(April_2020)_Boundaries_EN_BFC.shp") %>% st_transform(4236)
 
 ## import and tidy
 gpLevelData <- as_tibble(read.csv("GP_corticosterioid_prescriptions.csv")) %>%
@@ -31,6 +33,9 @@ ccgLevelData <- as.tibble(read.csv("CCG_corticosterioid_prescriptions.csv")) %>%
 
 ccgLevelDataGrouped <- group_by(gpLevelData, year, month, date)
 ccgLevelDataPresentation <- summarise_at(gpLevelDataGrouped, .vars=vars(items), .funs=list(sum))
+
+##build map layers
+
 
 
 ui <- fluidPage(
@@ -49,12 +54,11 @@ server <- function(input, output, session){
 
     output$mainMap <- renderLeaflet({
 
-        leaflet(mapData) %>% addCircles(lng = ~long, lat=~lat) %>% addTiles()
+        leaflet(regions_poly)  %>% addPolygons() %>% addTiles()
         
         })
     
     }
-
 
 
 shinyApp(ui, server)
