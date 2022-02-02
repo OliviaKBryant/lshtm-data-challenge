@@ -34,8 +34,25 @@ ccgLevelData <- as.tibble(read.csv("CCG_corticosterioid_prescriptions.csv")) %>%
 ccgLevelDataGrouped <- group_by(gpLevelData, year, month, date)
 ccgLevelDataPresentation <- summarise_at(gpLevelDataGrouped, .vars=vars(items), .funs=list(sum))
 
-##build map layers
+regionalLevelData <- as_tibble(read.csv("NHS_England_regions_corticosterioid_prescriptions.csv") %>% mutate(year = as.numeric(str_sub(date, 1, 4)), month = as.numeric(str_sub(date, 6, 7)), date=as.Date(date))) %>%
+    mutate(nhser20cd = case_when(
+               (name == "EAST OF ENGLAND COMMISSIONING REGION") ~ "E40000007",
+               (name == "LONDON COMMISSIONING REGION") ~ "E40000003",
+               (name == "MIDLANDS COMMISSIONING REGION") ~ "E40000008",
+               (name == "NORTH EAST AND YORKSHIRE COMMISSIONING REGION") ~ "E40000009",
+               (name == "NORTH WEST COMMISSIONING REGION") ~ "E40000010",
+               (name == "SOUTH EAST COMMISSIONING REGION") ~ "E40000005",
+               (name == "SOUTH WEST COMMISSIONING REGION") ~ "E40000006"
+           )
+        )
 
+regionalLevelDataGrouped <- group_by(regionalLevelData, nhser20cd, year)
+regionalLevelDataPresentation <- summarise_at(regionalLevelDataGrouped, .vars=vars(items), .funs=list(sum))
+
+tempDataset <- filter(regionalLevelDataPresentation, year==2017)
+tempDataset <- merge(regions_poly, tempDataset, by.x="nhser20cd", by.y="nhser20cd")
+
+##build map layers
 
 
 ui <- fluidPage(
@@ -49,12 +66,19 @@ ui <- fluidPage(
     )
 )
 
-
 server <- function(input, output, session){
 
+bins <- c(850332, 1111593, 1156070, 1306996, 1381807, 1640072, 1836607, Inf)
+pal <- colorBin("YlOrRd", domain = tempDataset$items, bins = bins)
+    
     output$mainMap <- renderLeaflet({
-
-        leaflet(regions_poly)  %>% addPolygons() %>% addTiles()
+        leaflet(regions_poly) %>% addTiles()  %>% addPolygons(
+           fillColor = pal(tempDataset$items),
+           weight = 2,
+           opacity = 1,
+           color = "white",
+           dashArray = "3",
+           fillOpacity = 0.7)
         
         })
     
