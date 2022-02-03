@@ -49,6 +49,7 @@ regionalLevelData <- as_tibble(read.csv("NHS_England_regions_corticosterioid_pre
 regionalLevelDataGrouped <- group_by(regionalLevelData, nhser20cd, year)
 regionalLevelDataPresentation <- summarise_at(regionalLevelDataGrouped, .vars=vars(items), .funs=list(sum))
 regionalLevelDataMerged <- merge(regions_poly, regionalLevelDataPresentation, by.x="nhser20cd", by.y="nhser20cd")
+item_bins <- sort(regionalLevelDataMerged$items)
 
 ##build map layers
 
@@ -58,7 +59,11 @@ ui <- fluidPage(
     tabsetPanel(
         tabPanel("Map tab",
                  titlePanel("Visualise geographic patterns"),
+                 
                  sliderInput("inputYear1", "Select Year", min=min(yearChoices), max=max(yearChoices), value=min(yearChoices), step=1),
+
+                 verbatimTextOutput("text1"),
+                 
                  leafletOutput("mainMap", height="95vh")
             
          )
@@ -66,18 +71,24 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session){
-
+    
 # reactive object for the working dataset to reduce reloading
-currentDataset1 <- reactive({
-    filter(regionalLevelDataMerged, year==input$inputYear1)
-})
+    currentDataSet1 <- reactive({       
+        filter(regionalLevelDataMerged, year==input$inputYear1)
 
-bins <- c(850332, 1111593, 1156070, 1306996, 1381807, 1640072, 1836607, Inf)
-pal <- colorBin("YlOrRd", domain = tempDataset$items, bins = bins)
+    })
+
+    output$text1 <- renderText({
+
+        sort(unique(currentDataSet1()$items))
+        
+        })
     
     output$mainMap <- renderLeaflet({
+        activeData <- currentDataSet1()
+        pal <- colorBin("YlOrRd", domain = activeData$items, bins = item_bins)
         leaflet(regions_poly) %>% addTiles()  %>% addPolygons(
-           fillColor = pal(currentDataset1()$items),
+           fillColor = pal(activeData$items),
            weight = 2,
            opacity = 1,
            color = "white",
