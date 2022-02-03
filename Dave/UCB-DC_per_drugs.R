@@ -36,10 +36,10 @@ theme_update(axis.title = element_text(),
              legend.background = element_rect(fill = "white", colour = "white"))
 ##
 ## Read in mapping for CCG to region
-map <- read_csv("/Users/dave/Library/CloudStorage/OneDrive-LondonSchoolofHygieneandTropicalMedicine/Data Challange/UCB/raw-data/Clinical_Commissioning_Group_to_STPs_(April_2021)_Lookup_in_England.csv")
+map <- read_csv("data/wrangling/Clinical_Commissioning_Group_to_STPs_(April_2021)_Lookup_in_England.csv")
 ##
 ## Read in all BNF codes 
-BNFcodes <- read_csv("/Users/dave/Library/CloudStorage/OneDrive-LondonSchoolofHygieneandTropicalMedicine/Data Challange/UCB/raw-data/20220115_1642266807923_BNF_Code_Information.csv")
+BNFcodes <- read_csv("data/wrangling/20220115_1642266807923_BNF_Code_Information.csv")
 ##
 ## Find BNF Chemical Substance codes in relevant sections.
   ## Codelists of partial BNF codes referring to chapters and sections 
