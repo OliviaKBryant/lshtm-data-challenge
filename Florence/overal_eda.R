@@ -1,7 +1,7 @@
 ## Exploratory data analysis on combined data
 
 # Load tidyverse
-setwd('/Users/fm/Public/HDS/Data Challenge/local data/Analysis Dataset')
+setwd('/Users/fm/Public/HDS/Data Challenge/local data/Analysis Dataset Updated')
 library(tidyverse)
 library(magrittr)
 library(zoo)
@@ -65,7 +65,7 @@ ggplot(data=ItemsCheck, aes(x=month)) +
      color = "Legend",
      title="Total Prescriptions by GP/CCG/Region") +
   scale_color_manual(values = colours)
-ggsave("Total_Items_GP_CCG_Region.png")
+ggsave("Total_Items_GP_CCG_Region.pdf")
 
 # Months over different years
 ItemsMY <- ItemsByMonthRegion
@@ -85,7 +85,7 @@ ggplot(ItemsMY, aes(x=lubridate::month(month, label=TRUE, abbr=TRUE),
         legend.background = element_blank(),
         legend.key = element_blank()) +
   scale_color_brewer(palette = 'Set2')
-ggsave("Total_Items_Month_Year.png")
+ggsave("Total_Items_Month_Year.pdf")
 
 # Analysis on COVID cases (For Record Only)
 # Load in COVID cases data (gov.uk)
@@ -117,8 +117,7 @@ ggplot(data=ItemsCases, aes(x=month)) +
   theme(plot.background = element_blank(),
         panel.background = element_blank(),
         legend.background = element_blank(),
-        legend.key = element_blank()) +
-  scale_color_brewer(palette = 'Set1')
+        legend.key = element_blank()) 
 
 # No correlation can be seen
-ggsave("Total_Items_VS_COVID_Cases.png")
+ggsave("Total_Items_VS_COVID_Cases.pdf")
