@@ -21,7 +21,6 @@
 ## Setup -----------------------------------------------------------------------
 library(tidyverse)
 library(ggthemes)
-setwd("~/HDS/Data Challange/UCB")
 theme_set(theme_fivethirtyeight())
 theme_update(axis.title = element_text(),
              plot.caption = element_text(hjust = 0, vjust = 0),
@@ -31,9 +30,9 @@ theme_update(axis.title = element_text(),
 ##
 ## Load Data -------------------------------------------------------------------
 ## Analysis dataset
-pd_gp <- read_csv("analysis-data/GP_corticosterioid_prescriptions.csv") 
+pd_gp <- read_csv("data/Analysis Dataset/GP_corticosterioid_prescriptions.csv") 
 ## GP information for prescribing setting
-GPs <- read_csv("raw-data/epraccur.csv", col_names = F) %>%
+GPs <- read_csv("data/epraccur.csv", col_names = F) %>%
   select(gp_id = X1, prescribing_setting = X26)
 ##
 ## Clean and Wrangle Data ------------------------------------------------------
@@ -115,7 +114,7 @@ ggplot(pd_gp_clean,
                date_breaks = "3 month") +
   theme(panel.grid.major.x = element_blank())
 ## Save plot to the size of a 16:9 PowerPoint slide
-ggsave('plots/Corticosteroids_Perscriptions_IMD_Line_538.png', width = 10, height = 5.625, units = "in")
+ggsave('Dave/plots/Corticosteroids_Perscriptions_IMD_Line_538.png', width = 10, height = 5.625, units = "in")
 ##
 ## Plot 2: Box plot......
 ggplot(pd_gp_clean, aes(items_per_1k_pats, colour = deprivation_decile)) +
@@ -132,5 +131,5 @@ ggplot(pd_gp_clean, aes(items_per_1k_pats, colour = deprivation_decile)) +
   theme(panel.grid.major.y = element_blank(),
         axis.text.y = element_blank())
 ## Save plot to the size of a 16:9 PowerPoint slide
-ggsave('plots/Corticosteroids_Perscriptions_IMD_Box_538.png', width = 10, height = 5.625, units = "in")
+ggsave('Dave/plots/Corticosteroids_Perscriptions_IMD_Box_538.png', width = 10, height = 5.625, units = "in")
 ## End
