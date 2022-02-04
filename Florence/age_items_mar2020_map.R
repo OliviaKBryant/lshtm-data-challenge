@@ -18,6 +18,7 @@ library(magrittr)
 library(sf)
 library(scales)
 library(patchwork)
+library(ggthemes)
 
 theme_set(theme_fivethirtyeight())
 theme_update(axis.title = element_text(),
@@ -35,6 +36,7 @@ theme_update(axis.title = element_text(),
 indid <- 336
 # Fetch data from fingertips (takes time)
 df65 <- fingertips_data(IndicatorID = indid, AreaTypeID = "All")
+# Create regional dataset
 age65 <- df65 %>%
   dplyr::select(AreaCode, AreaName, AreaType, Value, Timeperiod) %>%
   filter(grepl("^NHS region", AreaType))
@@ -52,10 +54,10 @@ age65 %<>%
 #   distinct()
 
 # import NHS England region boundaries
-NHS_regions_bound <- read_sf("/Users/fm/Public/HDS/Data Challenge/local data/NHS_England_Regions_(April_2019)_EN_BFC/NHS_England_Regions_(April_2019)_EN_BFC.shp")
+NHS_regions_bound <- read_sf("~/NHS_England_Regions_(April_2019)_EN_BFC/NHS_England_Regions_(April_2019)_EN_BFC.shp")
 
 # Regional
-regions <- read_csv("NHS_England_regions_corticosterioid_prescriptions.csv")
+regions <- read_csv("~/NHS_England_regions_corticosterioid_prescriptions.csv")
 regions %<>%
   mutate(prescription_rate_per_1000 = items/list_size *1000)
 
@@ -99,6 +101,7 @@ choropleth_maker <- function(date, low_lim, up_lim, boundary, data){
 }
 
 rxmap <- choropleth_maker("2020-03-01", 8, 18, NHS_regions_bound, regions)
+rxmap
 
 ## Map for % aged 65+
 choropleth_maker_a <- function(date, low_lim, up_lim, boundary, data){
@@ -106,7 +109,7 @@ choropleth_maker_a <- function(date, low_lim, up_lim, boundary, data){
   data.filtered <- left_join(boundary, data.filtered, by = c("nhser19nm" = "name"))
   choro <- ggplot(data.filtered, aes(fill = proportion65)) +
     geom_sf(color = "#ffffff", size = 0.1) +
-    scale_fill_distiller(direction = 1, palette='Blues', limits=c(low_lim,up_lim), name="% aged 65+") +
+    scale_fill_distiller(direction = 1, palette='Greens', limits=c(low_lim,up_lim), name="% aged 65+") +
     theme(
       plot.background = element_rect(fill = "white", colour = "white"),
       panel.grid.major = element_blank(),
