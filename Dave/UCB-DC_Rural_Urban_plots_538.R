@@ -68,8 +68,8 @@ ru_plot <- ggplot(pd_gp_clean,
        aes(date, 
            items_per_1k_pats, 
            colour = rural_urban_overall )) +
-  labs(title = "Systemic Corticosteroids Prescription Rates in <span style='color:#17BECF'>Rural</span> and <span style='color:#D32728'>Urban</span> Areas",
-       subtitle = 'Prescription rates in rural areas are higher than in urban areas',
+  labs(title = "Systemic Corticosteroids Prescription Rates in <span style='color:#17BECF'>Rural</span> and <span style='color:#D32728'>Urban</span><br>Areas of England",
+       subtitle = 'Prescription rates are higher in rural areas than urban areas',
        y = "Items per 1000 patients",
        x = "",
        caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
@@ -77,7 +77,7 @@ ru_plot <- ggplot(pd_gp_clean,
   scale_x_date(labels = scales::label_date_short(),
                date_breaks = "3 month",
                limits = c(as.Date("2019-01-01"), as.Date("2021-10-01")),
-               expand=c(0,0)) + # holds the xais to the above lims
+               expand=c(0,0)) + # holds the axis to the above lims
   theme(panel.grid.major.x = element_blank(),
         legend.position = "none")
 ##
@@ -91,9 +91,10 @@ ggsave('Dave/plots/Rural_Urban_Line_pp_no_annot.png',
        units = "in")
 ##
 ## Plot 1b - line: PowerPoint with annotations ------
-ru_annot <- ru_plot + geom_vline(xintercept = as.Date("2020-01-28"), # first case in the UK
-           colour = "gray",
-           alpha = 0.8) +
+ru_annot <- ru_plot + 
+  geom_vline(xintercept = as.Date("2020-01-28"), # first case in the UK
+             colour = "gray",
+             alpha = 0.8) +
   annotate("rect", # first lockdown
            fill = "gray", 
            alpha = 0.4,
@@ -142,7 +143,7 @@ ggsave('Dave/plots/Rural_Urban_Line_pp_annot.png',
 ## Save plot for a word document
 ggsave('Dave/plots/Rural_Urban_Line_word_annot.png',
        plot = ru_annot + 
-         theme(plot.title = element_markdown(size = 15),
+         theme(plot.title = element_markdown(size = 17),
                plot.subtitle = element_markdown(size = 12)),
        width = 8,
        height = 4.5,
