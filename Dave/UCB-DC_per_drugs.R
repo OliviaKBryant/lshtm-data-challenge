@@ -27,7 +27,7 @@ library(openprescribingR)
 library(tidyverse)
 library(ggthemes)
 library(scales)
-
+##
 theme_set(theme_fivethirtyeight())
 theme_update(axis.title = element_text(),
              plot.caption = element_text(hjust = 0, vjust = 0),
@@ -35,6 +35,11 @@ theme_update(axis.title = element_text(),
              panel.background = element_rect(fill = "white", colour = "white"),
              legend.background = element_rect(fill = "white", colour = "white"))
 ##
+## Analysis dataset - CCG level
+list_size <- read_csv("data/Analysis Dataset/CCG_corticosterioid_prescriptions.csv")  %>% 
+  select(date, list_size) %>% 
+  group_by(date) %>% 
+  summarise(list_size = sum(list_size))
 ## Read in mapping for CCG to region
 map <- read_csv("data/wrangling/Clinical_Commissioning_Group_to_STPs_(April_2021)_Lookup_in_England.csv")
 ##
@@ -58,27 +63,45 @@ bnf_csc <- BNFcodes %>%
 datalist = list()
   ## Loop to pull each substance per CCG
 for (i in seq_along(bnf_csc)) {
-  try(dat <- spending_by_CCG(bnf_csc[i])) # pull data from api
+  try(dat <- spending_by_code(bnf_csc[i])) # pull data from api
   dat$bnf_csc <- bnf_csc[i]  # add the BNF chem sub codes
   datalist[[i]] <- dat # add data to list
 }
-  ## bind list into dataframe, merge with chem sub names and CCG and data wrangle
-epd_ccg <- do.call(rbind, datalist) %>%
-  left_join(
+  ## bind list into dataframe, add list_size, 
+  ## merge with chem sub names and CCG and data wrangle
+pd_compound <- do.call(rbind, datalist) %>%
+  mutate(date = as.Date(date)) %>%
+  left_join( # for list size
+    list_size, 
+    by = "date") %>%
+  drop_na() %>%
+  left_join( # for BNF Chemical Substance name
     unique(select(BNFcodes,
                   "BNF Chemical Substance Code",
                   "BNF Chemical Substance")),
     by = c("bnf_csc" = "BNF Chemical Substance Code")) %>%
   rename(bnf_cs = 'BNF Chemical Substance') %>%
-  mutate(date = as.Date(date),
-         bnf_cs = factor(bnf_cs),
-         chapter = substr(bnf_csc, start = 1, stop = 2),
-         section = substr(bnf_csc, start = 1, stop = 4),
-         para = substr(bnf_csc, start = 1, stop = 6)) %>%
-  left_join(map, by = c("row_id" = "CCG21CDH"))
+  mutate(bnf_cs = factor(bnf_cs),
+         parent_compound = word(bnf_cs, 1)) %>%
+  group_by(date, bnf_cs, parent_compound) %>%
+  summarise(items = sum(items),
+            list_size = sum(list_size)) %>%
+  mutate(items_per_1k_pats = items/list_size *1000,
+         date = as.Date(date))
+ 
+
+pd_parent_compound <- pd_compound %>%
+  group_by(date,
+           parent_compound,
+           list_size) %>%
+  summarise(items = sum(items), 
+            quantity = sum(quantity), 
+            actual_cost = sum(actual_cost)) %>%
+  mutate(items_per_1k_pats = items/list_size *1000)
+
 ##
 ## aggregate on a national level and by parent compound
-epd_national_parent_compound <- epd_ccg %>%
+epd_national_parent_compound <- pd_ccg %>%
   mutate(parent_compound = word(bnf_cs, 1)) %>%
   group_by(parent_compound) %>%
   mutate(parent_compound_group = 
@@ -86,19 +109,23 @@ epd_national_parent_compound <- epd_ccg %>%
                   parent_compound, "Other")) %>%
   ungroup() %>%
   group_by(date,
-           parent_compound_group) %>%
+           parent_compound_group,
+           list_size) %>%
   summarise(items = sum(items), 
             quantity = sum(quantity), 
-            actual_cost = sum(actual_cost))
+            actual_cost = sum(actual_cost)) %>%
+  mutate(items_per_1k_pats = items/list_size *1000,
+         date = as.Date(date),
+         month = format(date,"%B"),
+         year = format(date, "%Y"))
 ##
 ## plots ---------------
   ## Setup plot --------
-p <- ggplot(mapping = aes(x=date,
-                          y=items,
-                          colour = parent_compound_group)) +
+p <- ggplot(mapping = aes(x= date,
+                          y= items_per_1k_pats)) +
   labs(title = 'Systemic Corticosteroids Prescriptions per Compound',
        subtitle = 'Before and after the onset of COVID-19\nApr 2019 - Oct 2021',
-       y = "Total Prescriptions across england",
+       y = "Items perscribed per 1000 patients",
        x = "",
        colour = "",
        caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
@@ -131,15 +158,35 @@ p <- ggplot(mapping = aes(x=date,
 ##
   ## Line plots ---------
     ## have to split it up for scale
-      ## Line plot 1
-p + geom_line(data = filter(epd_national_parent_compound,
-                            parent_compound_group == "Prednisolone")) +
+      ## Line plot 1 -----
+p + geom_line(data = filter(pd_parent_compound,
+                            parent_compound == "Prednisolone"), 
+              aes(colour = parent_compound)) +
   annotate("text", # labels
            x = c(as.Date("2020-02-02"), 
                  as.Date("2020-03-29"), 
                  as.Date("2020-11-08"), 
                  as.Date("2021-01-08")), 
-           y = 700000, 
+           y = 12, 
+           label = c("1st C19 Case", 
+                     "1st Lockdown",
+                     "2nd Lockdown",
+                     "3rd Lockdown") , 
+           size = 3,
+           alpha = 0.7,
+           angle = -90,
+           hjust = 0.5,
+           vjust = 0) 
+
+p + geom_line(data = filter(pd_compound,
+                            parent_compound == "Prednisolone"), 
+              aes(colour = bnf_cs)) +
+  annotate("text", # labels
+           x = c(as.Date("2020-02-02"), 
+                 as.Date("2020-03-29"), 
+                 as.Date("2020-11-08"), 
+                 as.Date("2021-01-08")), 
+           y = 12, 
            label = c("1st C19 Case", 
                      "1st Lockdown",
                      "2nd Lockdown",
@@ -152,20 +199,28 @@ p + geom_line(data = filter(epd_national_parent_compound,
 ## Save plot to the size of a 16:9 PowerPoint slide
 ggsave('Dave/plots/Corticosteroids_Perscriptions_per_drug_1.png', width = 10, height = 5.625, units = "in")
 ##
-      ## Line plot 2
-p + geom_line(data = filter(epd_national_parent_compound,
-                            parent_compound_group %in% 
-                              c("Fludrocortisone", 
+      ## Line plot 2 ---------
+p + geom_line(data = filter(pd_compound,
+                            parent_compound %in% 
+                              c(#"Prednisolone",
+                                "Fludrocortisone", 
                                 "Methylprednisolone", 
                                 "Hydrocortisone", 
                                 "Dexamethasone", 
-                                "Triamcinolone"))) +
-  annotate("text", # labels
+                                "Triamcinolone",
+                                "Budesonide"
+                                #"Budesonide",
+                                #"Deflazacort",
+                                #"Beclometasone",
+                                #"Prednisone",
+                                #"Cortisone"
+                                ))) +
+  annotate("text", # #
            x = c(as.Date("2020-02-02"), 
                  as.Date("2020-03-29"), 
                  as.Date("2020-11-08"), 
                  as.Date("2021-01-08")), 
-           y = 60000, 
+           y = 1, 
            label = c("1st C19 Case", 
                      "1st Lockdown",
                      "2nd Lockdown",
@@ -178,18 +233,28 @@ p + geom_line(data = filter(epd_national_parent_compound,
 ## Save plot to the size of a 16:9 PowerPoint slide
 ggsave('Dave/plots/Corticosteroids_Perscriptions_per_drug_2.png', width = 10, height = 5.625, units = "in")
 ##      
-      ## Line plot 3
-p + geom_line(data = filter(epd_national_parent_compound,
-                            parent_compound_group %in% 
-                              c("Budesonide", 
-                                "Betamethasone", 
-                                "Other"))) +
+      ## Line plot 3 --------
+p + geom_line(pd_compound,
+              parent_compound %in% 
+                c(#"Prednisolone",
+                  #"Fludrocortisone", 
+                  #"Methylprednisolone", 
+                  #"Hydrocortisone", 
+                  #"Dexamethasone", 
+                  #"Triamcinolone",
+                  #"Budesonide",
+                  "Budesonide",
+                  "Deflazacort",
+                  "Beclometasone",
+                  "Prednisone",
+                  "Cortisone"
+                )) +
   annotate("text", # labels
            x = c(as.Date("2020-02-02"), 
                  as.Date("2020-03-29"), 
                  as.Date("2020-11-08"), 
                  as.Date("2021-01-08")), 
-           y = 10000, 
+           y = 11, 
            label = c("1st C19 Case", 
                      "1st Lockdown",
                      "2nd Lockdown",
@@ -201,3 +266,23 @@ p + geom_line(data = filter(epd_national_parent_compound,
            vjust = 0) 
 ## Save plot to the size of a 16:9 PowerPoint slide
 ggsave('Dave/plots/Corticosteroids_Perscriptions_per_drug_3.png', width = 10, height = 5.625, units = "in")
+# injectable only compounds
+inject <- c("Dexamethasone phosphate", "Dexamethasone sodium phosphate", "Hydrocortisone sodium phosphate", "Hydrocortisone sodium succinate", "Prednisolone acetate", "Triamcinolone acetonide", "Triamcinolone hexacetonide")
+## plot injectables
+p + geom_line(
+              data = filter(pd_compound, bnf_cs %in% inject), mapping = aes(colour = bnf_cs)) +
+  annotate("text", # labels
+           x = c(as.Date("2020-02-02"), 
+                 as.Date("2020-03-29"), 
+                 as.Date("2020-11-08"), 
+                 as.Date("2021-01-08")), 
+           y = 0.5, 
+           label = c("1st C19 Case", 
+                     "1st Lockdown",
+                     "2nd Lockdown",
+                     "3rd Lockdown") , 
+           size = 3,
+           alpha = 0.7,
+           angle = -90,
+           hjust = 0,
+           vjust = 0) 

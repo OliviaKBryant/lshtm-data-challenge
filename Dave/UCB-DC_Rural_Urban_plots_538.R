@@ -22,13 +22,17 @@
 library(tidyverse)
 library(ggthemes)
 library(scales)
+library(ggtext)
 
 theme_set(theme_fivethirtyeight())
-theme_update(axis.title = element_text(),
-             plot.caption = element_text(hjust = 0, vjust = 0),
+theme_update(axis.title = element_markdown(),
+             plot.caption = element_markdown(hjust = 0, vjust = 0),
              plot.background = element_rect(fill = "white", colour = "white"),
              panel.background = element_rect(fill = "white", colour = "white"),
-             legend.background = element_rect(fill = "white", colour = "white"))
+             legend.background = element_rect(fill = "white", colour = "white"),
+             legend.box.background = element_rect(fill = "white", colour = "white"),
+             plot.title = element_markdown(),
+             plot.subtitle = element_markdown())
 ##
 ## Load Data -------------------------------------------------------------------
 ## Analysis dataset
@@ -59,20 +63,37 @@ pd_gp_clean <- pd_gp %>%
 ##
 ## Plots -----------------------------------------------------------------------
 ##
-## Plot 1: Time Series comparing urban and rural SCS items.
-ggplot(pd_gp_clean, 
+## Plot 1 - line: Setup -----
+ru_plot <- ggplot(pd_gp_clean, 
        aes(date, 
            items_per_1k_pats, 
            colour = rural_urban_overall )) +
-  geom_line() +
-  labs(title = 'Systemic Corticosteroids Prescriptions in Rural and Urban Areas',
-       subtitle = 'Before and after the onset of COVID-19\nApr 2019 - Oct 2021',
-       y = "Items perscribed per 1000 patients",
+  labs(title = "Systemic Corticosteroids Prescription Rates in <span style='color:#17BECF'>Rural</span> and <span style='color:#D32728'>Urban</span> Areas",
+       subtitle = 'Prescription rates in rural areas are higher than in urban areas',
+       y = "Items per 1000 patients",
        x = "",
        caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
-  ylim(0,22.5) +
-  geom_vline(xintercept = as.Date("2020-01-28"), # first case in the UK
-             colour = "gray") +
+  ylim(0,20) +
+  scale_x_date(labels = scales::label_date_short(),
+               date_breaks = "3 month",
+               limits = c(as.Date("2019-01-01"), as.Date("2021-10-01")),
+               expand=c(0,0)) + # holds the xais to the above lims
+  theme(panel.grid.major.x = element_blank(),
+        legend.position = "none")
+##
+## Plot 1a - line: PowerPoint without annotations ------
+ru_no_annot <- ru_plot + geom_line()
+## Save plot to the size of a 16:9 PowerPoint slide
+ggsave('Dave/plots/Rural_Urban_Line_pp_no_annot.png', 
+       plot = ru_no_annot, 
+       width = 10, 
+       height = 5.625, 
+       units = "in")
+##
+## Plot 1b - line: PowerPoint with annotations ------
+ru_annot <- ru_plot + geom_vline(xintercept = as.Date("2020-01-28"), # first case in the UK
+           colour = "gray",
+           alpha = 0.8) +
   annotate("rect", # first lockdown
            fill = "gray", 
            alpha = 0.4,
@@ -98,7 +119,7 @@ ggplot(pd_gp_clean,
                  as.Date("2020-03-29"), 
                  as.Date("2020-11-08"), 
                  as.Date("2021-01-08")), 
-           y = 21, 
+           y = 5, 
            label = c("1st C19 Case", 
                      "1st Lockdown",
                      "2nd Lockdown",
@@ -106,28 +127,34 @@ ggplot(pd_gp_clean,
            size = 3,
            alpha = 0.7,
            angle = -90,
-           hjust = 1,
+           hjust = 0.5,
            vjust = 0
-           ) + # stops the labels from disappearing 
-  scale_colour_fivethirtyeight(name="",
-                        breaks=c("rural", "urban"),
-                        labels=c("Rural", "Urban")) +
-  scale_x_date(labels = scales::label_date_short(),
-               date_breaks = "3 month",
-               limits = c(as.Date("2019-03-01"), as.Date("2021-10-01"))) +
-  theme(panel.grid.major.x = element_blank())
+  ) + 
+  geom_line()
 ## Save plot to the size of a 16:9 PowerPoint slide
-ggsave('Dave/plots/Corticosteroids_Perscriptions_Rural_Urban_Line_538.png', width = 10, height = 5.625, units = "in")
+ggsave('Dave/plots/Rural_Urban_Line_pp_annot.png',
+       plot = ru_annot,
+       width = 10,
+       height = 5.625,
+       units = "in")
 ##
+## Plot 1c - line: Word with annotations ------
+## Save plot for a word document
+ggsave('Dave/plots/Rural_Urban_Line_word_annot.png',
+       plot = ru_annot + 
+         theme(plot.title = element_markdown(size = 15),
+               plot.subtitle = element_markdown(size = 12)),
+       width = 8,
+       height = 4.5,
+       units = "in")
 ##
-##
-## Plot 2: Box plot......
+## Plot 2: Box plot ---------
 ggplot(pd_gp_clean, aes(items_per_1k_pats, colour = rural_urban_overall)) +
   geom_boxplot() +
   labs(title = 'Systemic Corticosteroids Prescriptions in Rural and Urban Areas',
        subtitle = 'Average Prescribing Rate\nApr 2019 - Oct 2021',
        y = "",
-       x = "Items perscribed per 1000 patients",
+       x = "Items per 1000 patients",
        colour='',
        caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
   scale_colour_discrete(name="",
