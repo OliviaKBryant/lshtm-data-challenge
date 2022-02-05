@@ -23,7 +23,8 @@ library(tidyverse)
 library(ggthemes)
 library(scales)
 library(ggtext)
-
+library(RColorBrewer)
+# styling of the plots
 theme_set(theme_fivethirtyeight())
 theme_update(axis.title = element_markdown(),
              plot.caption = element_markdown(hjust = 0, vjust = 0),
@@ -33,6 +34,8 @@ theme_update(axis.title = element_markdown(),
              legend.box.background = element_rect(fill = "white", colour = "white"),
              plot.title = element_markdown(),
              plot.subtitle = element_markdown())
+# colour blind friendly pallet for 10 colours
+cbf_pal <- brewer.pal(10, "Paired")
 ##
 ## Load Data -------------------------------------------------------------------
 ## Analysis dataset
@@ -46,7 +49,8 @@ GPs <- read_csv("data/epraccur.csv", col_names = F) %>%
 pd_gp_clean <- pd_gp %>%
   left_join(GPs, by = "gp_id") %>%
   drop_na() %>%
-  mutate(items_per_1k_pats = items/list_size *1000) %>%
+  mutate(items_per_1k_pats = items/list_size *1000,
+         deprivation_decile = factor(deprivation_decile)) %>%
   filter(covid_period %in% c("pre-covid year 2",
                              "pre-covid year 1",
                              "covid year 1",
@@ -72,27 +76,28 @@ imd_plot <- ggplot(pd_gp_clean,
   labs(title = "Systemic Corticosteroids Prescription Rates in England per the Indices<br>of Multiple Deprivation (IMD) Decile",
        subtitle = "Prescription rates are very similar between IMD Deciles<br>
        IMD decile: 
-       <span style='color:#d62728'>1</span>
-        <span style='color:#ff7f0e'>2</span>
-         <span style='color:#bcbd22'>3</span>
-          <span style='color:#17BECF'>4</span>
-           <span style='color:#17BECF'>5</span>
-            <span style='color:#17BECF'>6</span>
-             <span style='color:#17BECF'>7</span>
-              <span style='color:#17BECF'>8</span>
-               <span style='color:#17BECF'>9</span>
-                <span style='color:#17BECF'>10</span>
+       <span style='color:#A6CEE3'>1</span> | 
+       <span style='color:#1F78B4'>2</span> |
+       <span style='color:#B2DF8A'>3</span> | 
+       <span style='color:#33A02C'>4</span> | 
+       <span style='color:#FB9A99'>5</span> | 
+       <span style='color:#E31A1C'>6</span> | 
+       <span style='color:#FDBF6F'>7</span> | 
+       <span style='color:#FF7F00'>8</span> | 
+       <span style='color:#CAB2D6'>9</span> | 
+       <span style='color:#6A3D9A'>10</span>
        ",
        y = "Items per 1000 patients",
        x = "",
        caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
   ylim(0,20) +
-  scale_colour_discrete(name="IMD Decile") +
+  scale_colour_manual(values = cbf_pal) +
   scale_x_date(labels = scales::label_date_short(),
                date_breaks = "3 month",
                limits = c(as.Date("2019-01-01"), as.Date("2021-10-01")),
                expand=c(0,0)) + # holds the axis to the above lims
-  theme(panel.grid.major.x = element_blank())
+  theme(panel.grid.major.x = element_blank(),
+        legend.position = "none")
 ##
 ## Plot 1a - line: PowerPoint without annotations ------
 imd_no_annot <- imd_plot + geom_line()
@@ -104,7 +109,7 @@ ggsave('Dave/plots/IMD_Line_pp_no_annot.png',
        units = "in")
 ##
 ## Plot 1b - line: PowerPoint with annotations ------
-imd_no_annot <- imd_plot + 
+imd_annot <- imd_plot + 
   geom_vline(xintercept = as.Date("2020-01-28"), # first case in the UK
            colour = "gray",
            alpha = 0.8) +
@@ -156,26 +161,39 @@ ggsave('Dave/plots/IMD_Line_pp_annot.png',
 ## Save plot for a word document
 ggsave('Dave/plots/IMD_Line_word_no_annot.png',
        plot = imd_annot + 
-         theme(plot.title = element_markdown(size = 17),
+         theme(plot.title = element_markdown(size = 15),
                plot.subtitle = element_markdown(size = 12)),
        width = 8,
        height = 4.5,
        units = "in")
 ##
-## Plot 2: Box plot......
-ggplot(pd_gp_clean, aes(items_per_1k_pats, colour = deprivation_decile)) +
+## Plot 2: Box plot. -------
+imd_box <- ggplot(pd_gp_clean, aes(x = items_per_1k_pats, 
+                        y = deprivation_decile,
+                        colour = deprivation_decile)) +
   geom_boxplot() +
-  labs(title = 'Systemic Corticosteroids Prescriptions per IMD Decile',
-       subtitle = 'Average Prescribing Rate\nApr 2019 - Oct 2021',
-       y = "",
-       x = "SCS Prescriptions per 1000 patients",
+  labs(title = "Average Systemic Corticosteroids Prescriptions per the Indices<br>of Multiple Deprivation (IMD) Decile",
+  subtitle = "England - May 2018 to October 2019",
+       y = "IMD Decile",
+       x = "Items per 1000 patients",
        colour='',
        caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
-  scale_colour_discrete(name="",
-                        breaks=c("rural", "urban"),
-                        labels=c("Rural", "Urban")) +
+  scale_colour_manual(values = cbf_pal) +
   theme(panel.grid.major.y = element_blank(),
-        axis.text.y = element_blank())
+        axis.text.y = element_text(),
+        legend.position = "none")
 ## Save plot to the size of a 16:9 PowerPoint slide
-ggsave('Dave/plots/Corticosteroids_Perscriptions_IMD_Box_538.png', width = 10, height = 5.625, units = "in")
+ggsave('Dave/plots/IMD_Box_pp.png', 
+       plot = imd_box,
+       width = 10, 
+       height = 5.625, 
+       units = "in")
+## Save plot for Word document
+ggsave('Dave/plots/IMD_Box_word.png',
+       plot = imd_box +
+         theme(plot.title = element_markdown(size = 17),
+               plot.subtitle = element_markdown(size = 12)),
+       width = 8,
+       height = 4.5,
+       units = "in")
 ## End
