@@ -23,7 +23,7 @@ library(tidyverse)
 library(ggthemes)
 library(scales)
 library(ggtext)
-
+##
 theme_set(theme_fivethirtyeight())
 theme_update(axis.title = element_markdown(),
              plot.caption = element_markdown(hjust = 0, vjust = 0),
@@ -35,27 +35,15 @@ theme_update(axis.title = element_markdown(),
              plot.subtitle = element_markdown())
 ##
 ## Load Data -------------------------------------------------------------------
-## Analysis dataset
-pd_gp <- read_csv("data/Analysis Dataset/GP_corticosterioid_prescriptions.csv") 
-## GP information for prescribing setting
-GPs <- read_csv("data/epraccur.csv", col_names = F) %>%
-  select(gp_id = X1, prescribing_setting = X26)
+## load cleaned data from clean.R
+source("Dave/clean.R")
 ##
 ## Clean and Wrangle Data ------------------------------------------------------
 ##
-pd_gp_clean <- pd_gp %>%
-  left_join(GPs, by = "gp_id") %>%
-  drop_na() %>%
-  mutate(items_per_1k_pats = items/list_size *1000) %>%
-  filter(covid_period %in% c("pre-covid year 2",
-                             "pre-covid year 1",
-                             "covid year 1",
-                             "covid year 2"),
-         prescribing_setting == 4,
-         list_size != 0,
-         items_per_1k_pats < 200) %>%
+pd_gp_clean <- pd_gp_clean %>%
   group_by(date, rural_urban_overall, covid_period) %>%
-  summarise(items = sum(items), list_size = sum(list_size)) %>%
+  summarise(items = sum(items), 
+            list_size = sum(list_size)) %>%
   mutate(items_per_1k_pats = items/list_size *1000,
          date = as.Date(date),
          month = format(date,"%B"),
