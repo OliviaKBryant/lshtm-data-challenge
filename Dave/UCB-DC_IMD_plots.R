@@ -11,53 +11,14 @@
 ##
 ## Notes -----------------------------------------------------------------------
 ##
-## Data sources:
-## https://openprescribing.net/
-## https://digital.nhs.uk/services/organisation-data-service/file-downloads/gp-and-gp-practice-related-data
-##          > https://files.digital.nhs.uk/assets/ods/current/epraccur.zip
+## `clean.R` must be run before this script
 ##
-## Style: fivethirtyeight
-##   
-## Setup -----------------------------------------------------------------------
-library(tidyverse)
-library(ggthemes)
-library(scales)
-library(ggtext)
-library(RColorBrewer)
-# styling of the plots
-theme_set(theme_fivethirtyeight())
-theme_update(axis.title = element_markdown(),
-             plot.caption = element_markdown(hjust = 0, vjust = 0),
-             plot.background = element_rect(fill = "white", colour = "white"),
-             panel.background = element_rect(fill = "white", colour = "white"),
-             legend.background = element_rect(fill = "white", colour = "white"),
-             legend.box.background = element_rect(fill = "white", colour = "white"),
-             plot.title = element_markdown(),
-             plot.subtitle = element_markdown())
-# colour blind friendly pallet for 10 colours
-cbf_pal <- brewer.pal(10, "Paired")
+## Setup and load clean data ---------------------------------------------------
+source("Dave/clean.R")
 ##
-## Load Data -------------------------------------------------------------------
-## Analysis dataset
-pd_gp <- read_csv("data/Analysis Dataset/GP_corticosterioid_prescriptions.csv") 
-## GP information for prescribing setting
-GPs <- read_csv("data/epraccur.csv", col_names = F) %>%
-  select(gp_id = X1, prescribing_setting = X26)
+## Wrangle Data ------------------------------------------------------
 ##
-## Clean and Wrangle Data ------------------------------------------------------
-##
-pd_gp_clean <- pd_gp %>%
-  left_join(GPs, by = "gp_id") %>%
-  drop_na() %>%
-  mutate(items_per_1k_pats = items/list_size *1000,
-         deprivation_decile = factor(deprivation_decile)) %>%
-  filter(covid_period %in% c("pre-covid year 2",
-                             "pre-covid year 1",
-                             "covid year 1",
-                             "covid year 2"),
-         prescribing_setting == 4,
-         list_size != 0,
-         items_per_1k_pats < 200) %>%
+pd_gp_imd <- pd_gp_clean %>%
   group_by(date, deprivation_decile, covid_period) %>%
   summarise(items = sum(items), list_size = sum(list_size)) %>%
   mutate(items_per_1k_pats = items/list_size *1000,
@@ -68,7 +29,7 @@ pd_gp_clean <- pd_gp %>%
 ## Plots -----------------------------------------------------------------------
 ##
 ## Plot 1 - line: Setup -----
-imd_plot <- ggplot(pd_gp_clean,
+imd_plot <- ggplot(pd_gp_imd,
                    aes(date,
                        items_per_1k_pats,
                        group = factor(deprivation_decile),
@@ -168,7 +129,7 @@ ggsave('Dave/plots/IMD_Line_word_no_annot.png',
        units = "in")
 ##
 ## Plot 2: Box plot. -------
-imd_box <- ggplot(pd_gp_clean, aes(x = items_per_1k_pats, 
+imd_box <- ggplot(pd_gp_imd, aes(x = items_per_1k_pats, 
                         y = deprivation_decile,
                         colour = deprivation_decile)) +
   geom_boxplot() +

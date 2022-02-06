@@ -11,59 +11,49 @@
 ##
 ## Notes -----------------------------------------------------------------------
 ##
-## Data sources:
-## https://openprescribing.net/
-## https://digital.nhs.uk/services/organisation-data-service/file-downloads/gp-and-gp-practice-related-data
-##          > https://files.digital.nhs.uk/assets/ods/current/epraccur.zip
+## `clean.R` must be run before this script
 ##
-## Style: fivethirtyeight
-##   
-## Setup -----------------------------------------------------------------------
-library(tidyverse)
-library(ggthemes)
-setwd("~/HDS/Data Challange/UCB")
-theme_set(theme_fivethirtyeight())
-theme_update(axis.title = element_text(),
-             plot.caption = element_text(hjust = 0, vjust = 0))
+## Setup and load clean data ---------------------------------------------------
+source("Dave/clean.R")
 ##
-## Load Data -------------------------------------------------------------------
-pd_gp <- read_csv("data/Analysis Dataset/GP_corticosterioid_prescriptions.csv") 
-## GP information for prescribing setting
+## Load other data -------------------------------------------------------------------
+## London only data for visual comparison
 pd_lon <- read_csv("data/Analysis Dataset/NHS_England_regions_corticosterioid_prescriptions.csv") %>%
   filter(name == "LONDON COMMISSIONING REGION") %>%
-  select(date, items, list_size, name) %>%
-  mutate(items_per_1k_pats = items/list_size *1000)
-  
+  select(date, items, list_size, name)
 ##
 ## Clean and Wrangle Data ------------------------------------------------------
 ##
-pd_not_GPiH <- pd_gp %>%
+## Cleaned data for all English GP surgeries
+## Analysis dataset - gp level
+##
+pd_not_GPiH <- pd_gp_clean %>%
+  filter(gp_id != "E85124") %>%
   mutate(items_per_1k_pats = items/list_size *1000) %>%
   filter(list_size != 0,
          items_per_1k_pats < 200) %>%
   group_by(date) %>%
   summarise(items = sum(items), list_size = sum(list_size)) %>%
-  mutate(items_per_1k_pats = items/list_size *1000,
-         name = "GP average")
-
-pd_GPatH <- pd_gp %>%
+  mutate(name = "eng_gp_average")
+##
+## 
+pd_GPatH <- pd_gp_clean %>%
   filter(gp_id == "E85124") %>%
-  mutate(items_per_1k_pats = items/list_size *1000) %>%
-  select(date, items, list_size, items_per_1k_pats, name)
-
-pd_gp_clean <- rbind(pd_lon, pd_not_GPiH, pd_GPatH)
+  select(date, items, list_size, name)
+##
+pd_gp_clean <- rbind(pd_lon, pd_not_GPiH, pd_GPatH) %>%
+  mutate(items_per_1k_pats = items/list_size *1000)
 
 
 ##
 ## Plots -----------------------------------------------------------------------
 ##
 ## Plot 1: Time Series comparing urban and rural SCS items.
-ggplot(pd_gp_clean, 
+p <- ggplot(pd_gp_clean, 
        aes(date, 
-           items_per_1k_pats, colour = name)) +
-  geom_line() +
-  labs(title = 'Systemic Corticosteroids Prescriptions',
-       subtitle = 'Babylon GP at Hand',
+           items_per_1k_pats, colour = factor(name))) +
+  labs(title = "Systemic Corticosteroids Prescription Rates for <span style='color:#E69F00'>England</span>, <span style='color:#0072B2'>London</span> and <span style='color:#009E73'>Babaylon GP at Hand</span>",
+       subtitle = 'Babylon GP at Hand, a mostly online GP practice based in Hammersmith, has a significantly lower prescription rate that in England or London',
        y = "Items perscribed per 1000 patients",
        x = "",
        caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
@@ -94,7 +84,7 @@ ggplot(pd_gp_clean,
                  as.Date("2020-03-29"), 
                  as.Date("2020-11-08"), 
                  as.Date("2021-01-08")), 
-           y = 5, 
+           y = 3.4, 
            label = c("1st C19 Case", 
                      "1st Lockdown",
                      "2nd Lockdown",
@@ -102,29 +92,31 @@ ggplot(pd_gp_clean,
            size = 2.4,
            alpha = 0.7,
            angle = -90,
-           hjust = 1,
+           hjust = 0.5,
            vjust = 0) +
   xlim(as.Date("2019-01-01"), as.Date("2021-10-01"))+
-  theme(panel.grid.major.x = element_blank())
+  scale_colour_manual(values = cbf_pal_6) +
+  scale_x_date(labels = scales::label_date_short(),
+               date_breaks = "3 month",
+               limits = c(as.Date("2019-01-01"), as.Date("2021-10-01")),
+               expand=c(0,0)) + # holds the axis to the above limits
+  theme(plot.title = element_markdown(size = 15),
+        plot.subtitle = element_markdown(size = 10),
+        panel.grid.major.x = element_blank(),
+        legend.position = "none") +
+  geom_line(); p
 ## Save plot to the size of a 16:9 PowerPoint slide
-ggsave('Dave/plots/GP_In_Hand_Line_538.png', width = 10, height = 5.625, units = "in")
-##
-##
-##
-## Plot 2: Box plot......
-ggplot(pd_gp_clean, aes(items_per_1k_pats, colour = rural_urban_overall)) +
-  geom_boxplot() +
-  labs(title = 'Systemic Corticosteroids Prescriptions in Rural and Urban Areas',
-       subtitle = 'Average Prescribing Rate\nApr 2019 - Oct 2021',
-       y = "",
-       x = "Items perscribed per 1000 patients",
-       colour='',
-       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
-  scale_colour_discrete(name="",
-                        breaks=c("rural", "urban"),
-                        labels=c("Rural", "Urban")) +
-  theme(panel.grid.major.y = element_blank(),
-        axis.text.y = element_blank())
-## Save plot to the size of a 16:9 PowerPoint slide
-ggsave('plots/Corticosteroids_Perscriptions_Rural_Urban_Box_538.png', width = 10, height = 5.625, units = "in")
+ggsave('Dave/plots/GP_In_Hand_Line_pp.png', 
+       plot = p,
+       width = 10, 
+       height = 5.625, 
+       units = "in")
+## Save plot for a word document
+ggsave('Dave/plots/GP_In_Hand_Line_word.png',
+       plot = p + 
+         theme(plot.title = element_markdown(size = 13),
+               plot.subtitle = element_markdown(size = 8)),
+       width = 9,
+       height = 5,
+       units = "in")
 ## End

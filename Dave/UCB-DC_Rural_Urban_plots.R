@@ -11,36 +11,14 @@
 ##
 ## Notes -----------------------------------------------------------------------
 ##
-## Data sources:
-## https://openprescribing.net/
-## https://digital.nhs.uk/services/organisation-data-service/file-downloads/gp-and-gp-practice-related-data
-##          > https://files.digital.nhs.uk/assets/ods/current/epraccur.zip
+## `clean.R` must be run before this script
 ##
-## Style: fivethirtyeight
-##   
-## Setup -----------------------------------------------------------------------
-library(tidyverse)
-library(ggthemes)
-library(scales)
-library(ggtext)
-##
-theme_set(theme_fivethirtyeight())
-theme_update(axis.title = element_markdown(),
-             plot.caption = element_markdown(hjust = 0, vjust = 0),
-             plot.background = element_rect(fill = "white", colour = "white"),
-             panel.background = element_rect(fill = "white", colour = "white"),
-             legend.background = element_rect(fill = "white", colour = "white"),
-             legend.box.background = element_rect(fill = "white", colour = "white"),
-             plot.title = element_markdown(),
-             plot.subtitle = element_markdown())
-##
-## Load Data -------------------------------------------------------------------
-## load cleaned data from clean.R
+## Setup and load clean data ---------------------------------------------------
 source("Dave/clean.R")
 ##
-## Clean and Wrangle Data ------------------------------------------------------
+## Summarise data by rural urban classification --------------------------------
 ##
-pd_gp_clean <- pd_gp_clean %>%
+pd_gp_ru <- pd_gp_clean %>%
   group_by(date, rural_urban_overall, covid_period) %>%
   summarise(items = sum(items), 
             list_size = sum(list_size)) %>%
@@ -52,7 +30,7 @@ pd_gp_clean <- pd_gp_clean %>%
 ## Plots -----------------------------------------------------------------------
 ##
 ## Plot 1 - line: Setup -----
-ru_plot <- ggplot(pd_gp_clean, 
+ru_plot <- ggplot(pd_gp_ru, 
        aes(date, 
            items_per_1k_pats, 
            colour = rural_urban_overall )) +
@@ -65,7 +43,7 @@ ru_plot <- ggplot(pd_gp_clean,
   scale_x_date(labels = scales::label_date_short(),
                date_breaks = "3 month",
                limits = c(as.Date("2019-01-01"), as.Date("2021-10-01")),
-               expand=c(0,0)) + # holds the axis to the above lims
+               expand=c(0,0)) + # holds the axis to the above limits
   theme(panel.grid.major.x = element_blank(),
         legend.position = "none")
 ##
@@ -138,7 +116,7 @@ ggsave('Dave/plots/Rural_Urban_Line_word_annot.png',
        units = "in")
 ##
 ## Plot 2: Box plot ---------
-ggplot(pd_gp_clean, aes(items_per_1k_pats, colour = rural_urban_overall)) +
+ggplot(pd_gp_ru, aes(items_per_1k_pats, colour = rural_urban_overall)) +
   geom_boxplot() +
   labs(title = 'Systemic Corticosteroids Prescriptions in Rural and Urban Areas',
        subtitle = 'Average Prescribing Rate\nApr 2019 - Oct 2021',
