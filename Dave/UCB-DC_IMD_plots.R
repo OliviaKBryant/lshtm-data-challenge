@@ -50,7 +50,7 @@ imd_plot <- ggplot(pd_gp_imd,
        ",
        y = "Items per 1000 patients",
        x = "",
-       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
+       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2022") +
   ylim(0,20) +
   scale_colour_manual(values = cbf_pal) +
   scale_x_date(labels = scales::label_date_short(),
@@ -99,7 +99,7 @@ imd_annot <- imd_plot +
                  as.Date("2020-03-29"), 
                  as.Date("2020-11-08"), 
                  as.Date("2021-01-08")), 
-           y = 5, 
+           y = 2.5, 
            label = c("1st C19 Case", 
                      "1st Lockdown",
                      "2nd Lockdown",

@@ -56,7 +56,7 @@ p <- ggplot(pd_gp_clean,
        subtitle = 'Babylon GP at Hand, a mostly online GP practice based in Hammersmith, has a significantly lower prescription rate that in England or London',
        y = "Items perscribed per 1000 patients",
        x = "",
-       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
+       caption = "Source: OpenPrescribing.net, The DataLab, University of Oxford, 2022") +
   geom_vline(xintercept = as.Date("2020-01-28"), # first case in the UK
              colour = "gray") +
   annotate("rect", # first lockdown

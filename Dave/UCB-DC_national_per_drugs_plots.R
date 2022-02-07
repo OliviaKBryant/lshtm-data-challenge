@@ -25,7 +25,7 @@ p <- ggplot(mapping = aes(x= date,
   labs(y = "Items per 1000 patients",
        x = "",
        colour = "",
-       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
+       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2022") +
   geom_vline(xintercept = as.Date("2020-01-28"), # first case in the UK
              colour = "gray",
              alpha = 0.8) +
@@ -116,7 +116,7 @@ per_d_2 <- p + labs(
                      "1st Lockdown",
                      "2nd Lockdown",
                      "3rd Lockdown"), 
-           size = 3,
+           size = 2.5,
            alpha = 0.7,
            angle = -90,
            hjust = 0.5,

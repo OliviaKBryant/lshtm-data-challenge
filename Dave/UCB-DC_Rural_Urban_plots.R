@@ -65,15 +65,14 @@ pd_gp_ru_lon <- pd_gp_clean %>%
 ## Plots -----------------------------------------------------------------------
 ##
 ## Plot 1 - line: Setup -----
-ru_plot <- ggplot(pd_gp_ru, 
-       aes(date, 
+ru_plot <- ggplot(mapping = aes(date, 
            items_per_1k_pats, 
            colour = rural_urban_overall )) +
   labs(title = "Systemic Corticosteroids Prescription Rates in <span style='color:#D32728'>Rural</span> and <span style='color:#17BECF'>Urban</span><br>Areas of England",
        subtitle = 'Prescription rates are higher in rural areas than urban areas',
        y = "Items per 1000 patients",
        x = "",
-       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
+       caption = "Source: OpenPrescribing.net, The DataLab, University of Oxford, 2022") +
   ylim(0,20) +
   scale_x_date(labels = scales::label_date_short(),
                date_breaks = "3 month",
@@ -83,7 +82,8 @@ ru_plot <- ggplot(pd_gp_ru,
         legend.position = "none")
 ##
 ## Plot 1a - line: PowerPoint without annotations ------
-ru_no_annot <- ru_plot + geom_line()
+ru_no_annot <- ru_plot + 
+  geom_line(data = pd_gp_ru)
 ## Save plot to the size of a 16:9 PowerPoint slide
 ggsave('Dave/plots/Rural_Urban_Line_pp_no_annot.png', 
        plot = ru_no_annot, 
@@ -121,7 +121,7 @@ ru_annot <- ru_plot +
                  as.Date("2020-03-29"), 
                  as.Date("2020-11-08"), 
                  as.Date("2021-01-08")), 
-           y = 5, 
+           y = 2.5, 
            label = c("1st C19 Case", 
                      "1st Lockdown",
                      "2nd Lockdown",
@@ -132,7 +132,7 @@ ru_annot <- ru_plot +
            hjust = 0.5,
            vjust = 0
   ) + 
-  geom_line()
+  geom_line(data = pd_gp_ru)
 ## Save plot to the size of a 16:9 PowerPoint slide
 ggsave('Dave/plots/Rural_Urban_Line_pp_annot.png',
        plot = ru_annot,
@@ -165,17 +165,17 @@ ggplot(pd_gp_ru, aes(items_per_1k_pats, colour = rural_urban_overall)) +
   theme(panel.grid.major.y = element_blank(),
         axis.text.y = element_blank())
 ## Save plot to the size of a 16:9 PowerPoint slide
-ggsave('Dave/plots/Corticosteroids_Perscriptions_Rural_Urban_Box_538.png', width = 10, height = 5.625, units = "in")
+#ggsave('Dave/plots/Corticosteroids_Perscriptions_Rural_Urban_Box_538.png', width = 10, height = 5.625, units = "in")
 ##
 ## Plots excluding London-------------------------------------------------------
 ##
 ## Plot 1 - line: Setup -----
 ru_plot_ex_lon <- ggplot(mapping = aes(date, items_per_1k_pats, colour = rural_urban_overall )) +
-  labs(title = "Systemic Corticosteroids Prescription Rates in <span style='color:#D32728'>Rural</span> and <span style='color:#17BECF'>Urban</span><br>Areas of England",
-       subtitle = 'Prescription rates are higher in rural areas than urban areas',
+  labs(title = "Systemic Corticosteroids Prescription Rates in <span style='color:#D32728'>Rural</span> and <span style='color:#17BECF'>Urban</span><br>Areas of England - Excluding NHS Region London",
+       subtitle = 'Excluding NHS London decreases the difference between rural and urban prescription rates.',
        y = "Items per 1000 patients",
        x = "",
-       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
+       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2022") +
   ylim(0,20) +
   scale_x_date(labels = scales::label_date_short(),
                date_breaks = "3 month",
@@ -214,7 +214,7 @@ ru_ex_lon <- ru_plot_ex_lon +
                  as.Date("2020-03-29"), 
                  as.Date("2020-11-08"), 
                  as.Date("2021-01-08")), 
-           y = 5, 
+           y = 2.5, 
            label = c("1st C19 Case", 
                      "1st Lockdown",
                      "2nd Lockdown",
@@ -225,9 +225,8 @@ ru_ex_lon <- ru_plot_ex_lon +
            hjust = 0.5,
            vjust = 0
   ) + 
-  geom_line(data = pd_gp_ru_ex_lon) +
-  geom_line(data = pd_gp_ru_lon) +
-  geom_line(data = pd_gp_ru)
+  geom_line(data = pd_gp_ru_ex_lon)
+##
 ## Save plot to the size of a 16:9 PowerPoint slide
 ggsave('Dave/plots/Rural_Urban_Line_pp_ex_lon.png',
        plot = ru_ex_lon,
@@ -239,8 +238,24 @@ ggsave('Dave/plots/Rural_Urban_Line_pp_ex_lon.png',
 ## Save plot for a word document
 ggsave('Dave/plots/Rural_Urban_Line_word_ex_lon.png',
        plot = ru_ex_lon + 
+         geom_line(data = pd_gp_ru, linetype = 2) +
          theme(plot.title = element_markdown(size = 17),
-               plot.subtitle = element_markdown(size = 12)),
+               plot.subtitle = element_markdown(size = 12)) +
+         annotate(
+           geom = "text", 
+           x = as.Date("2019-02-01"), 
+           y = 7.5, 
+           label = "Prescription rates\nincluding London", 
+           hjust = "left",
+           color = "grey",
+           size = 3) +
+         annotate(geom = "segment",
+                  x = as.Date("2019-02-01"),
+                  xend = as.Date("2019-01-01"),
+                  y = 9,
+                  yend = 13.5,
+                  color = "grey")
+       ,
        width = 8,
        height = 4.5,
        units = "in")
