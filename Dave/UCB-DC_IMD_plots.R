@@ -130,8 +130,9 @@ ggsave('Dave/plots/IMD_Line_word_no_annot.png',
 ##
 ## Plot 2: Box plot. -------
 imd_box <- ggplot(pd_gp_imd, aes(x = items_per_1k_pats, 
-                        y = deprivation_decile,
-                        colour = deprivation_decile)) +
+                        y = factor(deprivation_decile),
+                        group = factor(deprivation_decile),
+                        colour = factor(deprivation_decile))) +
   geom_boxplot() +
   labs(title = "Average Systemic Corticosteroids Prescriptions per the Indices<br>of Multiple Deprivation (IMD) Decile",
   subtitle = "England - May 2018 to October 2019",

@@ -111,7 +111,7 @@ per_d_2 <- p + labs(
                  as.Date("2020-03-29"), 
                  as.Date("2020-11-08"), 
                  as.Date("2021-01-08")), 
-           y = 0.875, 
+           y = 0.9, 
            label = c("1st C19 Case", 
                      "1st Lockdown",
                      "2nd Lockdown",
