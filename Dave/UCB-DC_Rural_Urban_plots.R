@@ -28,8 +28,18 @@ CCG_NHSER <- read_csv("data/wrangling/Clinical_Commissioning_Group_to_STP_and_NH
   select(CCG21CD, NHSER21CDH, NHSER21NM)
 ## Summarise data by rural urban classification --------------------------------
 ##
+pd_gp_clean <- pd_gp_clean %>%
+  filter(date >= as.Date("2019-01-01"))
+
+pd_gp_clean %>%
+  group_by(rural_urban_overall) %>%
+  summarise(items = sum(items), 
+            list_size = sum(list_size)) %>%
+  mutate(items_per_1k_pats = items/list_size *1000)
+  
+
 pd_gp_ru <- pd_gp_clean %>%
-  group_by(date, rural_urban_overall, covid_period) %>%
+  group_by(date, rural_urban_overall) %>%
   summarise(items = sum(items), 
             list_size = sum(list_size)) %>%
   mutate(items_per_1k_pats = items/list_size *1000,
@@ -37,30 +47,41 @@ pd_gp_ru <- pd_gp_clean %>%
          month = format(date,"%B"),
          year = format(date, "%Y"))
 
+##
 pd_gp_ru_ex_lon <- pd_gp_clean %>%
   left_join(LSOA_CCG, by=c("LSOA_code" = "LSOA11CD")) %>%
   left_join(CCG_NHSER, by = "CCG21CD") %>%
   filter(NHSER21CDH != "Y56") %>%
-  group_by(date, rural_urban_overall, covid_period) %>%
+  group_by(date, rural_urban_overall) %>%
   summarise(items = sum(items), 
             list_size = sum(list_size)) %>%
   mutate(items_per_1k_pats = items/list_size *1000,
          date = as.Date(date),
          month = format(date,"%B"),
          year = format(date, "%Y"))
-
+##
 pd_gp_ru_lon <- pd_gp_clean %>%
   left_join(LSOA_CCG, by=c("LSOA_code" = "LSOA11CD")) %>%
   left_join(CCG_NHSER, by = "CCG21CD") %>%
   filter(NHSER21CDH == "Y56") %>%
-  group_by(date, rural_urban_overall, covid_period) %>%
+  group_by(date, rural_urban_overall) %>%
   summarise(items = sum(items), 
             list_size = sum(list_size)) %>%
   mutate(items_per_1k_pats = items/list_size *1000,
          date = as.Date(date),
          month = format(date,"%B"),
          year = format(date, "%Y"))
-
+##
+pd_gp_ru_class <- pd_gp_clean %>%
+  group_by(date, rural_urban_descr, covid_period) %>%
+  summarise(items = sum(items), 
+            list_size = sum(list_size)) %>%
+  rename(rural_urban_overall = rural_urban_descr) %>% # rename var to work with plots
+  mutate(items_per_1k_pats = items/list_size *1000,
+         date = as.Date(date),
+         month = format(date,"%B"),
+         year = format(date, "%Y"))
+##
 ##
 ## Plots -----------------------------------------------------------------------
 ##
@@ -169,7 +190,7 @@ ggplot(pd_gp_ru, aes(items_per_1k_pats, colour = rural_urban_overall)) +
 ##
 ## Plots excluding London-------------------------------------------------------
 ##
-## Plot 1 - line: Setup -----
+## Plot 3 - line: Setup -----
 ru_plot_ex_lon <- ggplot(mapping = aes(date, items_per_1k_pats, colour = rural_urban_overall )) +
   labs(title = "Systemic Corticosteroids Prescription Rates in <span style='color:#D32728'>Rural</span> and <span style='color:#17BECF'>Urban</span><br>Areas of England - Excluding NHS Region London",
        subtitle = 'Excluding NHS London decreases the difference between rural and urban prescription rates.',
@@ -184,7 +205,7 @@ ru_plot_ex_lon <- ggplot(mapping = aes(date, items_per_1k_pats, colour = rural_u
   theme(panel.grid.major.x = element_blank(),
         legend.position = "none")
 ##
-## Plot 1b - line: PowerPoint with annotations ------
+## Plot 3a - line: PowerPoint with annotations ------
 ru_ex_lon <- ru_plot_ex_lon + 
   geom_vline(xintercept = as.Date("2020-01-28"), # first case in the UK
              colour = "gray",
@@ -234,7 +255,7 @@ ggsave('Dave/plots/Rural_Urban_Line_pp_ex_lon.png',
        height = 5.625,
        units = "in")
 ##
-## Plot 1c - line: Word with annotations ------
+## Plot 3b - line: Word with annotations ------
 ## Save plot for a word document
 ggsave('Dave/plots/Rural_Urban_Line_word_ex_lon.png',
        plot = ru_ex_lon + 
@@ -256,6 +277,73 @@ ggsave('Dave/plots/Rural_Urban_Line_word_ex_lon.png',
                   yend = 13.5,
                   color = "grey")
        ,
+       width = 8,
+       height = 4.5,
+       units = "in")
+## Plots for Rural Urban Class-------------------------------------------------------
+##
+## Plot 4 - line: Setup -----
+##
+## Plot 4a - line: PowerPoint with annotations ------
+ru_annot_class <- ru_plot + 
+  geom_vline(xintercept = as.Date("2020-01-28"), # first case in the UK
+             colour = "gray",
+             alpha = 0.8) +
+  annotate("rect", # first lockdown
+           fill = "gray", 
+           alpha = 0.4,
+           xmin = as.Date("2020-03-26"), 
+           xmax = as.Date("2020-05-17"),
+           ymin=-Inf, ymax=Inf) + 
+  annotate("rect", # second lockdown
+           fill = "gray", 
+           alpha = 0.4, 
+           xmin = as.Date("2020-11-05"), 
+           xmax = as.Date("2020-12-02"),
+           ymin=-Inf, 
+           ymax=Inf) +
+  annotate("rect", # third lockdown
+           fill = "gray", 
+           alpha = 0.4, 
+           xmin = as.Date("2021-01-05"), 
+           xmax = as.Date("2021-04-12"),
+           ymin=-Inf, 
+           ymax=Inf) +
+  annotate("text", # labels
+           x = c(as.Date("2020-02-02"), 
+                 as.Date("2020-03-29"), 
+                 as.Date("2020-11-08"), 
+                 as.Date("2021-01-08")), 
+           y = 2.5, 
+           label = c("1st C19 Case", 
+                     "1st Lockdown",
+                     "2nd Lockdown",
+                     "3rd Lockdown") , 
+           size = 3,
+           alpha = 0.7,
+           angle = -90,
+           hjust = 0.5,
+           vjust = 0
+  ) + 
+  ylim(0,26) +
+  geom_line(data = pd_gp_ru_class) +
+  geom_line(data = pd_gp_ru_lon, linetype = 2) +
+  scale_colour_discrete(name = "") +
+  theme(legend.position = "bottom")
+##
+## Save plot to the size of a 16:9 PowerPoint slide
+ggsave('Dave/plots/Rural_Urban_Line_pp_annot_class.png',
+       plot = ru_annot_class,
+       width = 10,
+       height = 5.625,
+       units = "in")
+##
+## Plot 4b - line: Word with annotations ------
+## Save plot for a word document
+ggsave('Dave/plots/Rural_Urban_Line_word_annot_class.png',
+       plot = ru_annot_class + 
+         theme(plot.title = element_markdown(size = 17),
+               plot.subtitle = element_markdown(size = 12)),
        width = 8,
        height = 4.5,
        units = "in")

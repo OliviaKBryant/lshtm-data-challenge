@@ -62,22 +62,7 @@ p <- ggplot(mapping = aes(x= date,
 ## have to split it up for scale
 ## Line plot 1 -----
 per_d_1 <- p + labs(title = "<span style='color:#D32728'>Prednisolone</span> Prescription Rates in England",
-                    subtitle = "Prednisolone accounted for nearly 77% of all Systemic Corticosteroids Prescriptions in England") +
-  annotate("text", # labels
-           x = c(as.Date("2020-02-02"), 
-                 as.Date("2020-03-29"), 
-                 as.Date("2020-11-08"), 
-                 as.Date("2021-01-08")), 
-           y = 1.5, 
-           label = c("1st C19 Case", 
-                     "1st Lockdown",
-                     "2nd Lockdown",
-                     "3rd Lockdown") , 
-           size = 3,
-           alpha = 0.7,
-           angle = -90,
-           hjust = 0.5,
-           vjust = 0)  +
+                    subtitle = "Prednisolone accounted for nearly 77% of all systemic corticosteroids prescriptions in England") +
   scale_y_continuous(limits = c(0,13),
                      breaks = c(0,3,6,9,12)) +
   geom_line(data = filter(pd_parent_compound,
@@ -85,13 +70,43 @@ per_d_1 <- p + labs(title = "<span style='color:#D32728'>Prednisolone</span> Pre
             aes(colour = parent_compound))
 ## Save plot to the size of a 16:9 PowerPoint slide
 ggsave('Dave/plots/csc_per_drug_1_pp.png', 
-       plot = per_d_1,
+       plot = per_d_1 +
+         annotate("text", # labels
+                                x = c(as.Date("2020-02-02"), 
+                                      as.Date("2020-03-29"), 
+                                      as.Date("2020-11-08"), 
+                                      as.Date("2021-01-08")), 
+                                y = 1.5, 
+                                label = c("1st C19 Case", 
+                                          "1st Lockdown",
+                                          "2nd Lockdown",
+                                          "3rd Lockdown") , 
+                                size = 3,
+                                alpha = 0.7,
+                                angle = -90,
+                                hjust = 0.5,
+                                vjust = 0),
        width = 10, 
        height = 5.625, 
        units = "in")
 ## Save plot for a word document
 ggsave('Dave/plots/csc_per_drug_1_word.png',
        plot = per_d_1 + 
+         annotate("text", # labels
+                  x = c(as.Date("2020-02-02"), 
+                        as.Date("2020-03-29"), 
+                        as.Date("2020-11-08"), 
+                        as.Date("2021-01-08")), 
+                  y = 1.5, 
+                  label = c("1st C19 Case", 
+                            "1st Lockdown",
+                            "2nd Lockdown",
+                            "3rd Lockdown") , 
+                  size = 2.3,
+                  alpha = 0.7,
+                  angle = -90,
+                  hjust = 0.5,
+                  vjust = 0)  +
          theme(plot.title = element_markdown(size = 17),
                plot.subtitle = element_markdown(size = 12)),
        width = 8,
@@ -100,27 +115,12 @@ ggsave('Dave/plots/csc_per_drug_1_word.png',
 ##
 ## Line plot 2 ---------
 per_d_2 <- p + labs(
-  title = "Systemic Corticosteroids Prescription Prescription Rates in England",
-  subtitle = "Not all Systemic Corticosteroids saw a drop in prescription rates during the COVID19 pandemic.<br><span style='color:#D55E00'>Methylprednisolone acetate</span>
+  title = "Systemic Corticosteroids Prescription Rates in England",
+  subtitle = "Not all systemic corticosteroids saw a drop in prescription rates during the COVID19 pandemic.<br><span style='color:#D55E00'>Methylprednisolone acetate</span>
   and <span style='color:#CC79A7'>Triamcinolone acetonide</span> are injectables only when used systemically,<br>
   <span style='color:#56B4E9'>Fludrocortisone acetate</span>, <span style='color:#0072B2'>Hydrocortisone</span>,
   <span style='color:#009E73'>Dexamethasone</span> and
   <span style='color:#E69F00'>Budesonide</span> have a variety of admission routes.") +
-  annotate("text", # labels
-           x = c(as.Date("2020-02-02"), 
-                 as.Date("2020-03-29"), 
-                 as.Date("2020-11-08"), 
-                 as.Date("2021-01-08")), 
-           y = 0.9, 
-           label = c("1st C19 Case", 
-                     "1st Lockdown",
-                     "2nd Lockdown",
-                     "3rd Lockdown"), 
-           size = 2.5,
-           alpha = 0.7,
-           angle = -90,
-           hjust = 0.5,
-           vjust = 0)  +
   scale_y_continuous(limits = c(0,1),
                      breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   scale_colour_manual(values = cbf_pal_6) +
@@ -136,7 +136,22 @@ per_d_2 <- p + labs(
 ##
 ## Save plot to the size of a 16:9 PowerPoint slide
 ggsave('Dave/plots/csc_per_drug_2_pp.png', 
-       plot = per_d_2,
+       plot = per_d_2 +
+         annotate("text", # labels
+                  x = c(as.Date("2020-02-02"), 
+                        as.Date("2020-03-29"), 
+                        as.Date("2020-11-08"), 
+                        as.Date("2021-01-08")), 
+                  y = 0.9, 
+                  label = c("1st C19 Case", 
+                            "1st Lockdown",
+                            "2nd Lockdown",
+                            "3rd Lockdown"), 
+                  size = 2.5,
+                  alpha = 0.7,
+                  angle = -90,
+                  hjust = 0.5,
+                  vjust = 0) ,
        width = 10, 
        height = 5.625, 
        units = "in")
@@ -144,7 +159,22 @@ ggsave('Dave/plots/csc_per_drug_2_pp.png',
 ggsave('Dave/plots/csc_per_drug_2_word.png',
        plot = per_d_2 +
          theme(plot.title = element_markdown(size = 17),
-               plot.subtitle = element_markdown(size = 12)),
+               plot.subtitle = element_markdown(size = 10)) +
+         annotate("text", # labels
+                  x = c(as.Date("2020-02-02"), 
+                        as.Date("2020-03-29"), 
+                        as.Date("2020-11-08"), 
+                        as.Date("2021-01-08")), 
+                  y = 0.875, 
+                  label = c("1st C19 Case", 
+                            "1st Lockdown",
+                            "2nd Lockdown",
+                            "3rd Lockdown"), 
+                  size = 2.3,
+                  alpha = 0.7,
+                  angle = -90,
+                  hjust = 0.5,
+                  vjust = 0),
        width = 8,
        height = 4.5,
        units = "in")
