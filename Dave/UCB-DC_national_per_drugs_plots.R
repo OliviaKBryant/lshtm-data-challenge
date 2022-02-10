@@ -25,7 +25,7 @@ p <- ggplot(mapping = aes(x= date,
   labs(y = "Items per 1000 patients",
        x = "",
        colour = "",
-       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2022") +
+       caption = "Source: OpenPrescribing.net, The DataLab, University of Oxford, 2022") +
   geom_vline(xintercept = as.Date("2020-01-28"), # first case in the UK
              colour = "gray",
              alpha = 0.8) +

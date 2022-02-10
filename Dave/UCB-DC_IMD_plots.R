@@ -50,7 +50,7 @@ imd_plot <- ggplot(pd_gp_imd,
        ",
        y = "Items per 1000 patients",
        x = "",
-       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2022") +
+       caption = "Source: OpenPrescribing.net, The DataLab, University of Oxford, 2022") +
   ylim(0,20) +
   scale_colour_manual(values = cbf_pal) +
   scale_x_date(labels = scales::label_date_short(),
@@ -139,7 +139,7 @@ imd_box <- ggplot(pd_gp_imd, aes(x = items_per_1k_pats,
        y = "IMD Decile",
        x = "Items per 1000 patients",
        colour='',
-       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
+       caption = "Source: OpenPrescribing.net, The DataLab, University of Oxford, 2022") +
   scale_colour_manual(values = cbf_pal) +
   theme(panel.grid.major.y = element_blank(),
         axis.text.y = element_text(),

@@ -179,7 +179,7 @@ ggplot(pd_gp_ru, aes(items_per_1k_pats, colour = rural_urban_overall)) +
        y = "",
        x = "Items per 1000 patients",
        colour='',
-       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2017") +
+       caption = "Source: OpenPrescribing.net, The DataLab, University of Oxford, 2022") +
   scale_colour_discrete(name="",
                         breaks=c("rural", "urban"),
                         labels=c("Rural", "Urban")) +
@@ -196,7 +196,7 @@ ru_plot_ex_lon <- ggplot(mapping = aes(date, items_per_1k_pats, colour = rural_u
        subtitle = 'Excluding NHS London decreases the difference between rural and urban prescription rates.',
        y = "Items per 1000 patients",
        x = "",
-       caption = "Source: OpenPrescribing.net, EBM DataLab, University of Oxford, 2022") +
+       caption = "Source: OpenPrescribing.net, The DataLab, University of Oxford, 2022") +
   ylim(0,20) +
   scale_x_date(labels = scales::label_date_short(),
                date_breaks = "3 month",
@@ -280,6 +280,30 @@ ggsave('Dave/plots/Rural_Urban_Line_word_ex_lon.png',
        width = 8,
        height = 4.5,
        units = "in")
+##
+##
+## Plot 3c - line: powerpoint with annotations and dotted line ------
+  ## Save plot for a word document
+  ggsave('Dave/plots/Rural_Urban_Line_pp_ex_lon_c.png',
+         plot = ru_ex_lon + 
+           geom_line(data = pd_gp_ru, linetype = 2) +
+           annotate(
+             geom = "text", 
+             x = as.Date("2019-02-01"), 
+             y = 7.5, 
+             label = "Prescription rates\nincluding London", 
+             hjust = "left",
+             color = "grey",
+             size = 3) +
+           annotate(geom = "segment",
+                    x = as.Date("2019-02-01"),
+                    xend = as.Date("2019-01-01"),
+                    y = 9,
+                    yend = 13.5,
+                    color = "grey"),
+         width = 10,
+         height = 5.625,
+         units = "in")
 ## Plots for Rural Urban Class-------------------------------------------------------
 ##
 ## Plot 4 - line: Setup -----
